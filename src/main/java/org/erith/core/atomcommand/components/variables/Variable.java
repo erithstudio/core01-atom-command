@@ -48,5 +48,5 @@ public abstract class Variable {
     /// <summary>
     /// Callback to reset the variable if the Flowchart is reset.
     /// </summary>
-    public abstract void OnReset();
+    public abstract void onReset();
 }

@@ -3,10 +3,15 @@ package org.erith.core.atomcommand.components;
 import org.erith.core.atomcommand.annotations.Tooltip;
 import org.erith.core.atomcommand.commands.Command;
 import org.erith.core.atomcommand.components.variables.Variable;
+import org.erith.core.atomcommand.components.variables.VariableScope;
 import org.erith.core.atomcommand.interfaces.ISubstitutionHandler;
 import org.erith.core.atomcommand.thirdparty.LuaEnvironment;
 import org.erith.core.atomcommand.utils.AtomCommandConstants;
+import org.erith.core.atomcommand.utils.Debug;
 import org.erith.core.atomcommand.utils.StringSubstituter;
+
+import com.badlogic.gdx.math.*;
+import org.erith.core.atomcommand.variabletypes.BooleanVariable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -323,12 +328,12 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Position in the center of all blocks in the flowchart.
     /// </summary>
-    public virtual Vector2 CenterPosition { set; get; }
+    public Vector2 centerPosition;
 
     /// <summary>
     /// Variable to track flowchart's version so components can update to new versions.
     /// </summary>
-    public int version { set { version = value; } }
+    public int version;
 
     /// <summary>
     /// Returns true if the Flowchart gameobject is active.
@@ -445,7 +450,7 @@ public class Flowchart implements ISubstitutionHandler
         }
 
         // Can't restart a running block, have to wait until it's idle again
-        if (block.IsExecuting())
+        if (block.isExecuting())
         {
             return false;
         }
@@ -627,63 +632,63 @@ public class Flowchart implements ISubstitutionHandler
     /// BooleanVariable boolVar = flowchart.GetVariable("MyBool") as BooleanVariable;
     /// boolVar.Value = false;
     /// </summary>
-    public Variable GetVariable(String key)
+    public <T extends Variable> T getVariable(String key)
     {
         for (int i = 0; i < variables.size(); i++)
         {
             Variable variable = variables.get(i);
             if (variable != null && variable.getKey().equalsIgnoreCase(key))
             {
-                return variable;
+                return (T) variable;
             }
         }
 
         return null;
     }
 
-/// <summary>
-/// Returns the variable with the specified key, or null if the key is not found.
-/// You can then access the variable's value using the Value property. e.g.
-/// BooleanVariable boolVar = flowchart.GetVariable<BooleanVariable>("MyBool");
-/// boolVar.Value = false;
-/// </summary>
-public T GetVariable<T>(string key) where T : Variable
+    /// <summary>
+    /// Returns the variable with the specified key, or null if the key is not found.
+    /// You can then access the variable's value using the Value property. e.g.
+    /// BooleanVariable boolVar = flowchart.GetVariable<BooleanVariable>("MyBool");
+    /// boolVar.Value = false;
+    /// </summary>
+    public <T extends Variable> T genericMethod(String key) {
+    {
+        for (int i = 0; i < variables.size(); i++)
         {
-        for (int i = 0; i < variables.Count; i++)
-        {
-        var variable = variables[i];
-        if (variable != null && variable.Key == key)
-        {
-        return variable as T;
-        }
+            Variable variable = variables.get(i);
+            if (variable != null && variable.getKey().equalsIgnoreCase(key))
+            {
+                return (T) variable;
+            }
         }
 
         Debug.LogWarning("Variable " + key + " not found.");
         return null;
-        }
+    }
 
-/// <summary>
-/// Register a new variable with the Flowchart at runtime.
-/// The variable should be added as a component on the Flowchart game object.
-/// </summary>
-public void SetVariable<T>(string key, T newvariable) where T : Variable
+    /// <summary>
+    /// Register a new variable with the Flowchart at runtime.
+    /// The variable should be added as a component on the Flowchart game object.
+    /// </summary>
+    public <T extends Variable> void SetVariable(String key, T newvariable)
+    {
+        for (int i = 0; i < variables.size(); i++)
         {
-        for (int i = 0; i < variables.Count; i++)
-        {
-        var v = variables[i];
-        if (v != null && v.Key == key)
-        {
-        T variable = v as T;
-        if (variable != null)
-        {
-        variable = newvariable;
-        return;
-        }
-        }
+            Variable v = variables.get(i);
+            if (v != null && v.getKey() == key)
+            {
+                T variable = (T) v;
+                if (variable != null)
+                {
+                    variable = newvariable;
+                    return;
+                }
+            }
         }
 
         Debug.LogWarning("Variable " + key + " not found.");
-        }
+    }
 
     /// <summary>
     /// Checks if a given variable exists in the flowchart.
@@ -719,76 +724,76 @@ public void SetVariable<T>(string key, T newvariable) where T : Variable
         return vList;
     }
 
-/// <summary>
-/// Gets a list of all variables with public scope in this Flowchart.
-/// </summary>
-public virtual List<Variable> GetPublicVariables()
+    /// <summary>
+    /// Gets a list of all variables with public scope in this Flowchart.
+    /// </summary>
+    public List<Variable> GetPublicVariables()
+    {
+        List<Variable> publicVariables = new ArrayList<Variable>();
+        for (int i = 0; i < variables.size(); i++)
         {
-        var publicVariables = new List<Variable>();
-        for (int i = 0; i < variables.Count; i++)
-        {
-        var v = variables[i];
-        if (v != null && v.Scope == VariableScope.Public)
-        {
-        publicVariables.Add(v);
-        }
+            Variable v = variables.get(i);
+            if (v != null && v.getScope() == VariableScope.Public)
+            {
+                publicVariables.add(v);
+            }
         }
 
         return publicVariables;
-        }
+    }
 
-/// <summary>
-/// Gets the value of a boolean variable.
-/// Returns false if the variable key does not exist.
-/// </summary>
-public virtual bool GetBooleanVariable(string key)
-        {
-        var variable = GetVariable<BooleanVariable>(key);
+    /// <summary>
+    /// Gets the value of a boolean variable.
+    /// Returns false if the variable key does not exist.
+    /// </summary>
+    public boolean GetBooleanVariable(String key)
+    {
+        BooleanVariable variable = getVariable(key);
         if(variable != null)
         {
-        return GetVariable<BooleanVariable>(key).Value;
+            return ((BooleanVariable)getVariable(key)).getValue();
         }
         else
         {
-        return false;
+            return false;
         }
-        }
+    }
 
-/// <summary>
-/// Sets the value of a boolean variable.
-/// The variable must already be added to the list of variables for this Flowchart.
-/// </summary>
-public virtual void SetBooleanVariable(string key, bool value)
-        {
-        var variable = GetVariable<BooleanVariable>(key);
+    /// <summary>
+    /// Sets the value of a boolean variable.
+    /// The variable must already be added to the list of variables for this Flowchart.
+    /// </summary>
+    public void SetBooleanVariable(String key, boolean value)
+    {
+        BooleanVariable variable = getVariable(key);
         if(variable != null)
         {
-        variable.Value = value;
+            variable.setValue(value);
         }
-        }
+    }
 
-/// <summary>
-/// Gets the value of an integer variable.
-/// Returns 0 if the variable key does not exist.
-/// </summary>
-public virtual int GetIntegerVariable(string key)
-        {
-        var variable = GetVariable<IntegerVariable>(key);
+    /// <summary>
+    /// Gets the value of an integer variable.
+    /// Returns 0 if the variable key does not exist.
+    /// </summary>
+    public int GetIntegerVariable(String key)
+    {
+        IntegerVariable variable = getVariable<IntegerVariable>(key);
         if (variable != null)
         {
-        return GetVariable<IntegerVariable>(key).Value;
+            return GetVariable<IntegerVariable>(key).Value;
         }
         else
         {
-        return 0;
+            return 0;
         }
-        }
+    }
 
 /// <summary>
 /// Sets the value of an integer variable.
 /// The variable must already be added to the list of variables for this Flowchart.
 /// </summary>
-public virtual void SetIntegerVariable(string key, int value)
+public void SetIntegerVariable(string key, int value)
         {
         var variable = GetVariable<IntegerVariable>(key);
         if (variable != null)
@@ -801,7 +806,7 @@ public virtual void SetIntegerVariable(string key, int value)
 /// Gets the value of a float variable.
 /// Returns 0 if the variable key does not exist.
 /// </summary>
-public virtual float GetFloatVariable(string key)
+public float GetFloatVariable(string key)
         {
         var variable = GetVariable<FloatVariable>(key);
         if (variable != null)
@@ -818,7 +823,7 @@ public virtual float GetFloatVariable(string key)
 /// Sets the value of a float variable.
 /// The variable must already be added to the list of variables for this Flowchart.
 /// </summary>
-public virtual void SetFloatVariable(string key, float value)
+public void SetFloatVariable(string key, float value)
         {
         var variable = GetVariable<FloatVariable>(key);
         if (variable != null)

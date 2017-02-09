@@ -1,11 +1,11 @@
 /**
  * Copyright 2017, Denis Prasetio, Erith Studio
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License
  * at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,8 +31,7 @@ public abstract class Command implements Serializable {
     protected float executingIconTimer;
     protected Block parentBlock;
 
-    public Flowchart GetFlowchart()
-    {
+    public Flowchart GetFlowchart() {
         /*var flowchart = GetComponent<Flowchart>();
         if (flowchart == null &&
                 transform.parent != null)
@@ -47,19 +46,16 @@ public abstract class Command implements Serializable {
     /// <summary>
     /// Execute the command.
     /// </summary>
-    public void Execute()
-    {
+    public void Execute() {
         OnEnter();
     }
 
     /// <summary>
     /// End execution of this command and continue execution at the next command.
     /// </summary>
-    public void Continue()
-    {
+    public void Continue() {
         // This is a noop if the Block has already been stopped
-        if (isExecuting)
-        {
+        if (isExecuting) {
             Continue(commandIndex + 1);
         }
     }
@@ -68,11 +64,9 @@ public abstract class Command implements Serializable {
     /// End execution of this command and continue execution at a specific command index.
     /// </summary>
     /// <param name="nextCommandIndex">Next command index.</param>
-    public void Continue(int nextCommandIndex)
-    {
+    public void Continue(int nextCommandIndex) {
         OnExit();
-        if (parentBlock != null)
-        {
+        if (parentBlock != null) {
             parentBlock.setJumpToCommandIndex(nextCommandIndex);
         }
     }
@@ -80,11 +74,9 @@ public abstract class Command implements Serializable {
     /// <summary>
     /// Stops the parent Block executing.
     /// </summary>
-    public void StopParentBlock()
-    {
+    public void StopParentBlock() {
         OnExit();
-        if (parentBlock != null)
-        {
+        if (parentBlock != null) {
             parentBlock.Stop();
         }
     }
@@ -178,21 +170,37 @@ public abstract class Command implements Serializable {
     /// <summary>
     /// Returns the localization id for the Flowchart that contains this command.
     /// </summary>
-    public String GetFlowchartLocalizationId()
-    {
+    public String GetFlowchartLocalizationId() {
         // If no localization id has been set then use the Flowchart name
         Flowchart flowchart = GetFlowchart();
-        if (flowchart == null)
-        {
+        if (flowchart == null) {
             return "";
         }
 
-        String localizationId = GetFlowchart().LocalizationId;
+        /*String localizationId = GetFlowchart().LocalizationId;
         if (localizationId.length() == 0)
         {
             localizationId = flowchart.GetName();
         }
-
         return localizationId;
+        */
+
+        return "en_US";
+    }
+
+    public Block getParentBlock() {
+        return parentBlock;
+    }
+
+    public void setParentBlock(Block parentBlock) {
+        this.parentBlock = parentBlock;
+    }
+
+    public int getCommandIndex() {
+        return commandIndex;
+    }
+
+    public void setCommandIndex(int commandIndex) {
+        this.commandIndex = commandIndex;
     }
 }

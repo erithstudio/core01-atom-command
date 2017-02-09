@@ -16,9 +16,12 @@
 package org.erith.core.atomcommand.annotations;
 
 /**
- * <summary>Attribute class for variable properties.</summary>
+ * <summary>Attribute class for variables.</summary>
  */
-public @interface VariablePropertyAttribute {
-    String defaultText();
-    Class[] variableTypes();
+public @interface VariableInfo {
+    String category();
+
+    String variableType();
+
+    int order();
 }

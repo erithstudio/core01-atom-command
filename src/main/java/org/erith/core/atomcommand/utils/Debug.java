@@ -15,7 +15,13 @@
 
 package org.erith.core.atomcommand.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Debug {
+
+    private static final Logger logger = LoggerFactory.getLogger(Debug.class);
+
     /***
      * Summary: Logs message to Console.
      *
@@ -23,7 +29,7 @@ public class Debug {
      * @param message, String or Object to be converted to String representation for display.
      */
     public static void Log(Object message) {
-
+        logger.info(String.valueOf(message));
     }
 
     /***
@@ -34,7 +40,7 @@ public class Debug {
      * @param context, Object to which the message applies.
      */
     public static void Log(Object message, Object context) {
-
+        logger.info(String.valueOf(message), context);
     }
 
     /***
@@ -44,7 +50,7 @@ public class Debug {
      * @param message, String or Object to be converted to String representation for display.
      */
     public static void LogAssertion(Object message) {
-
+        logger.trace(String.valueOf(message));
     }
 
     /***
@@ -55,7 +61,7 @@ public class Debug {
      * @param message, String or Object to be converted to String representation for display.
      */
     public static void LogAssertion(Object message, Object context) {
-
+        logger.trace(String.valueOf(message), context);
     }
 
     /***
@@ -66,7 +72,7 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogAssertionFormat(String format, Object[] args) {
-
+        logger.trace(String.format(format, args));
     }
 
     /***
@@ -78,7 +84,7 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogAssertionFormat(Object context, String format, Object[] args) {
-
+        logger.trace(String.format(format, args), context);
     }
 
     /***
@@ -88,7 +94,7 @@ public class Debug {
      * @param message, String or Object to be converted to String representation for display.
      */
     public static void LogError(Object message) {
-
+        logger.error(String.valueOf(message));
     }
 
     /***
@@ -99,7 +105,7 @@ public class Debug {
      * @param context, Object to which the message applies.
      */
     public static void LogError(Object message, Object context) {
-
+        logger.error(String.valueOf(message), context);
     }
 
     /***
@@ -110,7 +116,7 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogErrorFormat(String format, Object[] args) {
-
+        logger.error(String.format(format, args));
     }
 
     /***
@@ -122,7 +128,7 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogErrorFormat(Object context, String format, Object[] args) {
-
+        logger.error(String.format(format, args), context);
     }
 
     /***
@@ -132,7 +138,7 @@ public class Debug {
      * @param exception, Runtime Exception.
      */
     public static void LogException(Exception exception) {
-
+        logger.error("Exception:", exception);
     }
 
     /***
@@ -143,7 +149,7 @@ public class Debug {
      * @param exception, Runtime Exception.
      */
     public static void LogException(Exception exception, Object context) {
-
+        logger.error(String.valueOf(context), exception);
     }
 
     /***
@@ -154,7 +160,7 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogFormat(String format, Object[] args) {
-
+        logger.info(String.format(format, args));
     }
 
     /***
@@ -166,7 +172,7 @@ public class Debug {
      * @param context, Object to which the message applies.
      */
     public static void LogFormat(Object context, String format, Object[] args) {
-
+        logger.info(String.format(format, args), context);
     }
 
     /***
@@ -176,7 +182,7 @@ public class Debug {
      * @param message, String or Object to be converted to String representation for display.
      */
     public static void LogWarning(Object message) {
-
+        logger.warn(String.valueOf(message));
     }
 
     /***
@@ -187,7 +193,7 @@ public class Debug {
      * @param context, Object to which the message applies.
      */
     public static void LogWarning(Object message, Object context) {
-
+        logger.warn(String.valueOf(message), context);
     }
 
     /***
@@ -198,7 +204,7 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogWarningFormat(String format, Object[] args) {
-
+        logger.warn(String.format(format, args));
     }
 
     /***
@@ -210,6 +216,6 @@ public class Debug {
      * @param args, Format arguments.
      */
     public static void LogWarningFormat(Object context, String format, Object[] args) {
-
+        logger.warn(String.format(format, args), context);
     }
 }

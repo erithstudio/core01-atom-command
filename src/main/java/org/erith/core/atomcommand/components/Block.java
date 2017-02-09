@@ -25,13 +25,65 @@ import java.util.*;
  * </summary>
  */
 public class Block extends Node {
+    /// <summary>
+    /// Unique identifier for the Block.
+    /// </summary>
     protected int itemId = -1;
+
+    /// <summary>
+    /// The name of the block node as displayed in the Flowchart window.
+    /// </summary>
     protected String blockName = "New Block";
+
+    /// <summary>
+    /// Description text to display under the block node
+    /// </summary>
     protected String description = "";
+
+    /// <summary>
+    /// An optional Event Handler which can execute the block when an event occurs.
+    /// Note: Using the concrete class instead of the interface here because of weird editor behaviour.
+    /// </summary>
     protected EventHandler eventHandler;
+
+    /// <summary>
+    /// The list of commands in the sequence.
+    /// </summary>
     protected List<Command> commandList = new ArrayList<Command>();
+
+    /// <summary>
+    /// The execution state of the Block.
+    /// </summary>
     protected ExecutionState executionState;
+
+    /// <summary>
+    /// The currently executing command.
+    /// </summary>
     protected Command activeCommand;
+
+    /// <summary>
+    /// Timer for fading Block execution icon.
+    /// </summary>
+    protected float ExecutingIconTimer;
+
+    /// <summary>
+    /// Controls the next command to execute in the block execution coroutine.
+    /// </summary>
+    protected int JumpToCommandIndex;
+
+    /**
+     * <summary>
+     *     Index of last command executed before the current one.
+     *     -1 indicates no previous command.
+     * </summary>
+     */
+    protected int previousActiveCommandIndex = -1;
+
+    protected int jumpToCommandIndex = -1;
+
+    protected int executionCount;
+
+    protected boolean executionInfoSet = false;
 
     public int getItemId() {
         return itemId;
@@ -49,8 +101,8 @@ public class Block extends Node {
         this.blockName = blockName;
     }
 
-    public String getDescription() {
-        return description;
+    public ExecutionState getExecutionState() {
+        return this.executionState;
     }
 
     public void setDescription(String description) {
@@ -73,23 +125,25 @@ public class Block extends Node {
         this.commandList = commandList;
     }
 
-    /**
-     * <summary>
-     *     Index of last command executed before the current one.
-     *     -1 indicates no previous command.
-     * </summary>
-     */
-    protected int previousActiveCommandIndex = -1;
-
-    protected int jumpToCommandIndex = -1;
-
-    protected int executionCount;
-
-    protected boolean executionInfoSet = false;
-
     protected void Awake()
     {
         setExecutionInfo();
+    }
+
+    public float getExecutingIconTimer() {
+        return ExecutingIconTimer;
+    }
+
+    public void setExecutingIconTimer(float executingIconTimer) {
+        ExecutingIconTimer = executingIconTimer;
+    }
+
+    public int getJumpToCommandIndex() {
+        return JumpToCommandIndex;
+    }
+
+    public void setJumpToCommandIndex(int jumpToCommandIndex) {
+        JumpToCommandIndex = jumpToCommandIndex;
     }
 
     protected void setExecutionInfo()
@@ -104,8 +158,8 @@ public class Block extends Node {
             {
                 continue;
             }
-            command.ParentBlock = this;
-            command.CommandIndex = index++;
+            command.setParentBlock(this);
+            command.setCommandIndex(index++);
         }
 
         // Ensure all commands are at their correct indent level
@@ -135,55 +189,9 @@ public class Block extends Node {
     }
 
     /// <summary>
-    /// The execution state of the Block.
-    /// </summary>
-    public virtual ExecutionState State { get { return executionState; } }
-
-    /// <summary>
-    /// Unique identifier for the Block.
-    /// </summary>
-    public virtual int ItemId { get { return itemId; } set { itemId = value; } }
-
-    /// <summary>
-    /// The name of the block node as displayed in the Flowchart window.
-    /// </summary>
-    public virtual string BlockName { get { return blockName; } set { blockName = value; } }
-
-    /// <summary>
-    /// Description text to display under the block node
-    /// </summary>
-    public virtual string Description { get { return description; } }
-
-    /// <summary>
-    /// An optional Event Handler which can execute the block when an event occurs.
-    /// Note: Using the concrete class instead of the interface here because of weird editor behaviour.
-    /// </summary>
-    public virtual EventHandler _EventHandler { get { return eventHandler; } set { eventHandler = value; } }
-
-    /// <summary>
-    /// The currently executing command.
-    /// </summary>
-    public virtual Command ActiveCommand { get { return activeCommand; } }
-
-    /// <summary>
-    /// Timer for fading Block execution icon.
-    /// </summary>
-    public virtual float ExecutingIconTimer { get; set; }
-
-    /// <summary>
-    /// The list of commands in the sequence.
-    /// </summary>
-    public virtual List<Command> CommandList { get { return commandList; } }
-
-    /// <summary>
-    /// Controls the next command to execute in the block execution coroutine.
-    /// </summary>
-    public virtual int JumpToCommandIndex { set { jumpToCommandIndex = value; } }
-
-    /// <summary>
     /// Returns the parent Flowchart for this Block.
     /// </summary>
-    public virtual Flowchart GetFlowchart()
+    public Flowchart GetFlowchart()
     {
         return GetComponent<Flowchart>();
     }
@@ -191,7 +199,7 @@ public class Block extends Node {
     /// <summary>
     /// Returns true if the Block is executing a command.
     /// </summary>
-    public virtual bool IsExecuting()
+    public boolean IsExecuting()
     {
         return (executionState == ExecutionState.Executing);
     }
@@ -199,7 +207,7 @@ public class Block extends Node {
     /// <summary>
     /// Returns the number of times this Block has executed.
     /// </summary>
-    public virtual int GetExecutionCount()
+    public int GetExecutionCount()
     {
         return executionCount;
     }
@@ -207,7 +215,7 @@ public class Block extends Node {
     /// <summary>
     /// Start a coroutine which executes all commands in the Block. Only one running instance of each Block is permitted.
     /// </summary>
-    public virtual void StartExecution()
+    public void StartExecution()
     {
         StartCoroutine(Execute());
     }
@@ -217,7 +225,7 @@ public class Block extends Node {
     /// </summary>
     /// <param name="commandIndex">Index of command to start execution at</param>
     /// <param name="onComplete">Delegate function to call when execution completes</param>
-    public virtual IEnumerator Execute(int commandIndex = 0, Action onComplete = null)
+    public Enumeration Execute(int commandIndex = 0, Action onComplete = null)
     {
         if (executionState != ExecutionState.Idle)
         {
@@ -331,7 +339,7 @@ public class Block extends Node {
     /// <summary>
     /// Stop executing commands in this Block.
     /// </summary>
-    public virtual void Stop()
+    public void Stop()
     {
         // Tell the executing command to stop immediately
         if (activeCommand != null)
@@ -347,15 +355,15 @@ public class Block extends Node {
     /// <summary>
     /// Returns a list of all Blocks connected to this one.
     /// </summary>
-    public virtual List<Block> GetConnectedBlocks()
+    public List<Block> GetConnectedBlocks()
     {
-        var connectedBlocks = new List<Block>();
-        for (int i = 0; i < commandList.Count; i++)
+        List<Block> connectedBlocks = new ArrayList<Block>();
+        for (int i = 0; i < commandList.size(); i++)
         {
-            var command = commandList[i];
+            Command command = commandList.get(i)
             if (command != null)
             {
-                command.GetConnectedBlocks(ref connectedBlocks);
+                command.GetConnectedBlocks(connectedBlocks);
             }
         }
         return connectedBlocks;
@@ -365,12 +373,12 @@ public class Block extends Node {
     /// Returns the type of the previously executing command.
     /// </summary>
     /// <returns>The previous active command type.</returns>
-    public virtual System.Type GetPreviousActiveCommandType()
+    public Class GetPreviousActiveCommandType()
     {
         if (previousActiveCommandIndex >= 0 &&
-                previousActiveCommandIndex < commandList.Count)
+                previousActiveCommandIndex < commandList.size())
         {
-            return commandList[previousActiveCommandIndex].GetType();
+            return commandList.get(previousActiveCommandIndex).getClass();
         }
 
         return null;
@@ -379,12 +387,12 @@ public class Block extends Node {
     /// <summary>
     /// Recalculate the indent levels for all commands in the list.
     /// </summary>
-    public virtual void UpdateIndentLevels()
+    public void UpdateIndentLevels()
     {
         int indentLevel = 0;
-        for (int i = 0; i < commandList.Count; i++)
+        for (int i = 0; i < commandList.size(); i++)
         {
-            var command = commandList[i];
+            Command command = commandList.get(i);
             if (command == null)
             {
                 continue;
@@ -394,7 +402,7 @@ public class Block extends Node {
                 indentLevel--;
             }
             // Negative indent level is not permitted
-            indentLevel = Math.Max(indentLevel, 0);
+            indentLevel = Math.max(indentLevel, 0);
             command.IndentLevel = indentLevel;
             if (command.OpenBlock())
             {
@@ -406,16 +414,16 @@ public class Block extends Node {
     /// <summary>
     /// Returns the index of the Label command with matching key, or -1 if not found.
     /// </summary>
-    public virtual int GetLabelIndex(string labelKey)
+    public int GetLabelIndex(String labelKey)
     {
-        if (labelKey.Length == 0)
+        if (labelKey.length() == 0)
         {
             return -1;
         }
 
-        for (int i = 0; i < commandList.Count; i++)
+        for (int i = 0; i < commandList.size(); i++)
         {
-            var command = commandList[i];
+            Command command = commandList.get(i);
             var labelCommand = command as Label;
             if (labelCommand != null && String.Compare(labelCommand.Key, labelKey, true) == 0)
             {
