@@ -1,9 +1,12 @@
 package org.erith.core.atomcommand.components;
 
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 import org.erith.core.atomcommand.annotations.Tooltip;
 import org.erith.core.atomcommand.commands.Command;
+import org.erith.core.atomcommand.commands.Label;
 import org.erith.core.atomcommand.components.variables.Variable;
 import org.erith.core.atomcommand.components.variables.VariableScope;
+import org.erith.core.atomcommand.eventhandlers.Action;
 import org.erith.core.atomcommand.interfaces.ISubstitutionHandler;
 import org.erith.core.atomcommand.thirdparty.LuaEnvironment;
 import org.erith.core.atomcommand.utils.AtomCommandConstants;
@@ -12,14 +15,15 @@ import org.erith.core.atomcommand.utils.StringSubstituter;
 
 import com.badlogic.gdx.math.*;
 import org.erith.core.atomcommand.variabletypes.BooleanVariable;
+import org.erith.core.atomcommand.variabletypes.FloatVariable;
+import org.erith.core.atomcommand.variabletypes.IntegerVariable;
+import org.erith.core.atomcommand.variabletypes.StringVariable;
 
+import javax.activation.CommandInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Flowchart implements ISubstitutionHandler
-{
-    protected int version = 0; // Default to 0 to always trigger an update for older versions of Fungus.
-
+public class Flowchart implements ISubstitutionHandler {
     /// <summary>
     /// Scroll position of Flowchart editor window.
     /// </summary>
@@ -59,6 +63,14 @@ public class Flowchart implements ISubstitutionHandler
     /// Currently selected command in the Flowchart editor.
     /// </summary>
     protected List<Command> selectedCommands = new ArrayList<Command>();
+
+    public List<Command> getSelectedCommands() {
+        return selectedCommands;
+    }
+
+    public void setSelectedCommands(List<Command> selectedCommands) {
+        this.selectedCommands = selectedCommands;
+    }
 
     /// <summary>
     /// The list of variables that can be accessed by the Flowchart.
@@ -132,27 +144,23 @@ public class Flowchart implements ISubstitutionHandler
         cachedFlowcharts = new ArrayList<Flowchart>();
     }
 
-    protected void Awake()
-    {
+    protected void Awake() {
         CheckEventSystem();
         LevelWasLoaded();
     }
 
-    protected void LevelWasLoaded()
-    {
+    protected void LevelWasLoaded() {
         // Reset the flag for checking for an event system as there may not be one in the newly loaded scene.
 //            eventSystemPresent = false;
     }
 
-    protected void Start()
-    {
+    protected void Start() {
         CheckEventSystem();
     }
 
     // There must be an Event System in the scene for Say and Menu input to work.
     // This method will automatically instantiate one if none exists.
-    protected void CheckEventSystem()
-    {
+    protected void CheckEventSystem() {
 //            if (eventSystemPresent)
 //            {
 //                return;
@@ -173,8 +181,7 @@ public class Flowchart implements ISubstitutionHandler
 //            eventSystemPresent = true;
     }
 
-    protected void OnEnable()
-    {
+    protected void OnEnable() {
 //            if (!cachedFlowcharts.Contains(this))
 //            {
 //                cachedFlowcharts.Add(this);
@@ -185,8 +192,7 @@ public class Flowchart implements ISubstitutionHandler
 //            UpdateVersion();
     }
 
-    protected void UpdateVersion()
-    {
+    protected void UpdateVersion() {
 //            if (version == FungusConstants.CurrentVersion)
 //            {
 //                // No need to update
@@ -208,13 +214,11 @@ public class Flowchart implements ISubstitutionHandler
 //            version = FungusConstants.CurrentVersion;
     }
 
-    protected void OnDisable()
-    {
+    protected void OnDisable() {
 //            cachedFlowcharts.Remove(this);
     }
 
-    protected void CheckItemIds()
-    {
+    protected void CheckItemIds() {
 //            // Make sure item ids are unique and monotonically increasing.
 //            // This should always be the case, but some legacy Flowcharts may have issues.
 //            List<int> usedIds = new List<int>();
@@ -241,8 +245,7 @@ public class Flowchart implements ISubstitutionHandler
 //            }
     }
 
-    protected void CleanupComponents()
-    {
+    protected void CleanupComponents() {
 //            // Delete any unreferenced components which shouldn't exist any more
 //            // Unreferenced components don't have any effect on the flowchart behavior, but
 //            // they waste memory so should be cleared out periodically.
@@ -303,8 +306,8 @@ public class Flowchart implements ISubstitutionHandler
 //            }
     }
 
-    protected Block CreateBlockComponent(GameObject parent)
-    {
+    protected Block CreateBlockComponent(Object parent) {
+//    protected Block CreateBlockComponent(GameObject parent) {
 //            Block block = parent.AddComponent<Block>();
 //            return block;
 
@@ -315,8 +318,7 @@ public class Flowchart implements ISubstitutionHandler
     /// Sends a message to all Flowchart objects in the current scene.
     /// Any block with a matching MessageReceived event handler will start executing.
     /// </summary>
-    public static void BroadcastFungusMessage(String messageName)
-    {
+    public static void BroadcastFungusMessage(String messageName) {
         /*var eventHandlers = UnityEngine.Object.FindObjectsOfType<MessageReceived>();
         for (int i = 0; i < eventHandlers.Length; i++)
         {
@@ -333,13 +335,12 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Variable to track flowchart's version so components can update to new versions.
     /// </summary>
-    public int version;
+    protected int version = 0;
 
     /// <summary>
     /// Returns true if the Flowchart gameobject is active.
     /// </summary>
-    public boolean isActive()
-    {
+    public boolean isActive() {
         // return gameObject.activeInHierarchy;
         return true;
     }
@@ -347,8 +348,7 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Returns the Flowchart gameobject name.
     /// </summary>
-    public String getName()
-    {
+    public String getName() {
 //        return gameObject.name;
         return "";
     }
@@ -358,8 +358,7 @@ public class Flowchart implements ISubstitutionHandler
     /// Item ids increase monotically so they are guaranteed to
     /// be unique within a Flowchart.
     /// </summary>
-    public int nextItemId()
-    {
+    public int nextItemId() {
         int maxId = -1;
         /*var blocks = GetComponents<Block>();
         for (int i = 0; i < blocks.Length; i++)
@@ -381,8 +380,7 @@ public class Flowchart implements ISubstitutionHandler
     /// Create a new block node which you can then add commands to.
     /// </summary>
     // public Block CreateBlock(Vector2 position)
-    public Block createBlock(Object position)
-    {
+    public Block createBlock(Object position) {
 //        Block b = CreateBlockComponent(gameObject);
 //        b._NodeRect = new Rect(position.x, position.y, 0, 0);
 //        b.BlockName = GetUniqueBlockKey(b.BlockName, b);
@@ -395,8 +393,7 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Returns the named Block in the flowchart, or null if not found.
     /// </summary>
-    public Block findBlock(String blockName)
-    {
+    public Block findBlock(String blockName) {
 //        var blocks = GetComponents<Block>();
 //        for (int i = 0; i < blocks.Length; i++)
 //        {
@@ -413,8 +410,7 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Execute a child block in the Flowchart.
     /// You can use this method in a UI event. e.g. to handle a button click.
-    public void ExecuteBlock(String blockName)
-    {
+    public void ExecuteBlock(String blockName) {
 //        var block = FindBlock(blockName);
 //
 //        if (block == null)
@@ -435,28 +431,28 @@ public class Flowchart implements ISubstitutionHandler
     /// This version provides extra options to control how the block is executed.
     /// Returns true if the Block started execution.
     /// </summary>
-    public boolean ExecuteBlock(Block block, int commandIndex, Action onComplete)
-    {
-        if (block == null)
-        {
+    public boolean ExecuteBlock(Block block) {
+        return ExecuteBlock(block, 0, null);
+    }
+
+    public boolean ExecuteBlock(Block block, int commandIndex, Action onComplete) {
+        if (block == null) {
             Debug.LogError("Block must not be null");
             return false;
         }
 
-        if (((Block)block).gameObject != gameObject)
-        {
-            Debug.LogError("Block must belong to the same gameobject as this Flowchart");
-            return false;
-        }
-
-        // Can't restart a running block, have to wait until it's idle again
-        if (block.isExecuting())
-        {
-            return false;
-        }
-
-        // Start executing the Block as a new coroutine
-        StartCoroutine(block.Execute(commandIndex, onComplete));
+//        if (((Block) block).gameObject != gameObject) {
+//            Debug.LogError("Block must belong to the same gameobject as this Flowchart");
+//            return false;
+//        }
+//
+//        // Can't restart a running block, have to wait until it's idle again
+//        if (block.isExecuting()) {
+//            return false;
+//        }
+//
+//        // Start executing the Block as a new coroutine
+//        StartCoroutine(block.Execute(commandIndex, onComplete));
 
         return true;
     }
@@ -464,75 +460,63 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Stop all executing Blocks in this Flowchart.
     /// </summary>
-    public void StopAllBlocks()
-    {
-        var blocks = GetComponents<Block>();
-        for (int i = 0; i < blocks.Length; i++)
-        {
-            var block = blocks[i];
-            if (block.IsExecuting())
-            {
-                block.Stop();
-            }
-        }
+    public void StopAllBlocks() {
+//        var blocks = GetComponents < Block > ();
+//        for (int i = 0; i < blocks.Length; i++) {
+//            var block = blocks[i];
+//            if (block.IsExecuting()) {
+//                block.Stop();
+//            }
+//        }
     }
 
     /// <summary>
     /// Sends a message to this Flowchart only.
     /// Any block with a matching MessageReceived event handler will start executing.
     /// </summary>
-    public void SendFungusMessage(String messageName)
-    {
-        var eventHandlers = GetComponents<MessageReceived>();
-        for (int i = 0; i < eventHandlers.Length; i++)
-        {
-            var eventHandler = eventHandlers[i];
-            eventHandler.OnSendFungusMessage(messageName);
-        }
+    public void SendFungusMessage(String messageName) {
+//        var eventHandlers = GetComponents < MessageReceived > ();
+//        for (int i = 0; i < eventHandlers.Length; i++) {
+//            var eventHandler = eventHandlers[i];
+//            eventHandler.OnSendFungusMessage(messageName);
+//        }
     }
 
     /// <summary>
     /// Returns a new variable key that is guaranteed not to clash with any existing variable in the list.
     /// </summary>
-    public String GetUniqueVariableKey(string originalKey, Variable ignoreVariable = null)
-    {
+    public String GetUniqueVariableKey(String originalKey, Variable ignoreVariable) {
         int suffix = 0;
-        string baseKey = originalKey;
+        String baseKey = originalKey;
 
-        // Only letters and digits allowed
-        char[] arr = baseKey.Where(c => (char.IsLetterOrDigit(c) || c == '_')).ToArray();
-        baseKey = new string(arr);
+//        // Only letters and digits allowed
+//        char[] arr = baseKey.Where(c = > (char.IsLetterOrDigit(c) || c == '_')).ToArray();
+//        baseKey = new String(arr);
+//
+//        // No leading digits allowed
+//        baseKey = baseKey.TrimStart('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+//
+//        // No empty keys allowed
+//        if (baseKey.length() == 0) {
+//            baseKey = "Var";
+//        }
 
-        // No leading digits allowed
-        baseKey = baseKey.TrimStart('0','1','2','3','4','5','6','7','8','9');
-
-        // No empty keys allowed
-        if (baseKey.Length == 0)
-        {
-            baseKey = "Var";
-        }
-
-        string key = baseKey;
-        while (true)
-        {
-            bool collision = false;
-            for (int i = 0; i < variables.Count; i++)
-            {
-                var variable = variables[i];
-                if (variable == null || variable == ignoreVariable || variable.Key == null)
-                {
+        String key = baseKey;
+        while (true) {
+            boolean collision = false;
+            for (int i = 0; i < variables.size(); i++) {
+                Variable variable = variables.get(i);
+                if (variable == null || variable == ignoreVariable || variable.getKey() == null) {
                     continue;
                 }
-                if (variable.Key.Equals(key, StringComparison.CurrentCultureIgnoreCase))
-                {
+                if (variable.getKey().equalsIgnoreCase(key)) {
                     collision = true;
                     suffix++;
                     key = baseKey + suffix;
                 }
             }
 
-            if (!collision)
-            {
+            if (!collision) {
                 return key;
             }
         }
@@ -541,14 +525,12 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Returns a new Block key that is guaranteed not to clash with any existing Block in the Flowchart.
     /// </summary>
-    public String GetUniqueBlockKey(String originalKey, Block ignoreBlock = null)
-    {
+    public String GetUniqueBlockKey(String originalKey, Block ignoreBlock) {
         int suffix = 0;
         String baseKey = originalKey.trim();
 
         // No empty keys allowed
-        if (baseKey.length() == 0)
-        {
+        if (baseKey.length() == 0) {
             baseKey = AtomCommandConstants.DefaultBlockName;
         }
 
@@ -556,26 +538,21 @@ public class Flowchart implements ISubstitutionHandler
         Block[] blocks = null;
 
         String key = baseKey;
-        while (true)
-        {
+        while (true) {
             boolean collision = false;
-            for (int i = 0; i < blocks.length; i++)
-            {
+            for (int i = 0; i < blocks.length; i++) {
                 Block block = blocks[i];
-                if (block == ignoreBlock || block.getBlockName() == null)
-                {
+                if (block == ignoreBlock || block.getBlockName() == null) {
                     continue;
                 }
-                if (block.getBlockName().equalsIgnoreCase(key))
-                {
+                if (block.getBlockName().equalsIgnoreCase(key)) {
                     collision = true;
                     suffix++;
                     key = baseKey + suffix;
                 }
             }
 
-            if (!collision)
-            {
+            if (!collision) {
                 return key;
             }
         }
@@ -584,42 +561,35 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Returns a new Label key that is guaranteed not to clash with any existing Label in the Block.
     /// </summary>
-    public String GetUniqueLabelKey(String originalKey, Label ignoreLabel)
-    {
+    public String GetUniqueLabelKey(String originalKey, Label ignoreLabel) {
         int suffix = 0;
         String baseKey = originalKey.trim();
 
         // No empty keys allowed
-        if (baseKey.length() == 0)
-        {
+        if (baseKey.length() == 0) {
             baseKey = "New Label";
         }
 
-        var block = ignoreLabel.ParentBlock;
+        Block block = ignoreLabel.getParentBlock();
 
         String key = baseKey;
-        while (true)
-        {
-            bool collision = false;
-            var commandList = block.CommandList;
-            for (int i = 0; i < commandList.Count; i++)
-            {
-                var command = commandList[i];
-                Label label = command as Label;
-                if (label == null || label == ignoreLabel)
-                {
+        while (true) {
+            boolean collision = false;
+            List<Command> commandList = block.getCommandList();
+            for (int i = 0; i < commandList.size(); i++) {
+                Command command = commandList.get(i);
+                Label label = (Label) command;
+                if (label == null || label == ignoreLabel) {
                     continue;
                 }
-                if (label.Key.Equals(key, StringComparison.CurrentCultureIgnoreCase))
-                {
+                if (label.getKey().equalsIgnoreCase(key)) {
                     collision = true;
                     suffix++;
                     key = baseKey + suffix;
                 }
             }
 
-            if (!collision)
-            {
+            if (!collision) {
                 return key;
             }
         }
@@ -632,13 +602,10 @@ public class Flowchart implements ISubstitutionHandler
     /// BooleanVariable boolVar = flowchart.GetVariable("MyBool") as BooleanVariable;
     /// boolVar.Value = false;
     /// </summary>
-    public <T extends Variable> T getVariable(String key)
-    {
-        for (int i = 0; i < variables.size(); i++)
-        {
+    public <T extends Variable> T getVariable(String key) {
+        for (int i = 0; i < variables.size(); i++) {
             Variable variable = variables.get(i);
-            if (variable != null && variable.getKey().equalsIgnoreCase(key))
-            {
+            if (variable != null && variable.getKey().equalsIgnoreCase(key)) {
                 return (T) variable;
             }
         }
@@ -653,12 +620,9 @@ public class Flowchart implements ISubstitutionHandler
     /// boolVar.Value = false;
     /// </summary>
     public <T extends Variable> T genericMethod(String key) {
-    {
-        for (int i = 0; i < variables.size(); i++)
-        {
+        for (int i = 0; i < variables.size(); i++) {
             Variable variable = variables.get(i);
-            if (variable != null && variable.getKey().equalsIgnoreCase(key))
-            {
+            if (variable != null && variable.getKey().equalsIgnoreCase(key)) {
                 return (T) variable;
             }
         }
@@ -671,16 +635,12 @@ public class Flowchart implements ISubstitutionHandler
     /// Register a new variable with the Flowchart at runtime.
     /// The variable should be added as a component on the Flowchart game object.
     /// </summary>
-    public <T extends Variable> void SetVariable(String key, T newvariable)
-    {
-        for (int i = 0; i < variables.size(); i++)
-        {
+    public <T extends Variable> void SetVariable(String key, T newvariable) {
+        for (int i = 0; i < variables.size(); i++) {
             Variable v = variables.get(i);
-            if (v != null && v.getKey() == key)
-            {
+            if (v != null && v.getKey() == key) {
                 T variable = (T) v;
-                if (variable != null)
-                {
+                if (variable != null) {
                     variable = newvariable;
                     return;
                 }
@@ -693,14 +653,11 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Checks if a given variable exists in the flowchart.
     /// </summary>
-    public boolean HasVariable(String key)
-    {
-        for (int i = 0; i < variables.size(); i++)
-        {
+    public boolean HasVariable(String key) {
+        for (int i = 0; i < variables.size(); i++) {
             Variable v = variables.get(i);
-            if (v != null && v.getKey().equals(key))
-            {
-            return true;
+            if (v != null && v.getKey().equals(key)) {
+                return true;
             }
         }
         return false;
@@ -709,15 +666,12 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Returns the list of variable names in the Flowchart.
     /// </summary>
-    public String[] getVariableNames()
-    {
+    public String[] getVariableNames() {
         String[] vList = new String[variables.size()];
 
-        for (int i = 0; i < variables.size(); i++)
-        {
+        for (int i = 0; i < variables.size(); i++) {
             Variable v = variables.get(i);
-            if (v != null)
-            {
+            if (v != null) {
                 vList[i] = v.getKey();
             }
         }
@@ -727,14 +681,11 @@ public class Flowchart implements ISubstitutionHandler
     /// <summary>
     /// Gets a list of all variables with public scope in this Flowchart.
     /// </summary>
-    public List<Variable> GetPublicVariables()
-    {
+    public List<Variable> GetPublicVariables() {
         List<Variable> publicVariables = new ArrayList<Variable>();
-        for (int i = 0; i < variables.size(); i++)
-        {
+        for (int i = 0; i < variables.size(); i++) {
             Variable v = variables.get(i);
-            if (v != null && v.getScope() == VariableScope.Public)
-            {
+            if (v != null && v.getScope() == VariableScope.Public) {
                 publicVariables.add(v);
             }
         }
@@ -746,15 +697,11 @@ public class Flowchart implements ISubstitutionHandler
     /// Gets the value of a boolean variable.
     /// Returns false if the variable key does not exist.
     /// </summary>
-    public boolean GetBooleanVariable(String key)
-    {
+    public boolean GetBooleanVariable(String key) {
         BooleanVariable variable = getVariable(key);
-        if(variable != null)
-        {
-            return ((BooleanVariable)getVariable(key)).getValue();
-        }
-        else
-        {
+        if (variable != null) {
+            return ((BooleanVariable) getVariable(key)).getValue();
+        } else {
             return false;
         }
     }
@@ -763,11 +710,9 @@ public class Flowchart implements ISubstitutionHandler
     /// Sets the value of a boolean variable.
     /// The variable must already be added to the list of variables for this Flowchart.
     /// </summary>
-    public void SetBooleanVariable(String key, boolean value)
-    {
+    public void SetBooleanVariable(String key, boolean value) {
         BooleanVariable variable = getVariable(key);
-        if(variable != null)
-        {
+        if (variable != null) {
             variable.setValue(value);
         }
     }
@@ -776,419 +721,357 @@ public class Flowchart implements ISubstitutionHandler
     /// Gets the value of an integer variable.
     /// Returns 0 if the variable key does not exist.
     /// </summary>
-    public int GetIntegerVariable(String key)
-    {
-        IntegerVariable variable = getVariable<IntegerVariable>(key);
-        if (variable != null)
-        {
-            return GetVariable<IntegerVariable>(key).Value;
-        }
-        else
-        {
+    public int GetIntegerVariable(String key) {
+        IntegerVariable variable = getVariable(key);
+        if (variable != null) {
+            return ((IntegerVariable) getVariable(key)).getValue();
+        } else {
             return 0;
         }
     }
 
-/// <summary>
-/// Sets the value of an integer variable.
-/// The variable must already be added to the list of variables for this Flowchart.
-/// </summary>
-public void SetIntegerVariable(string key, int value)
-        {
-        var variable = GetVariable<IntegerVariable>(key);
-        if (variable != null)
-        {
-        variable.Value = value;
+    /// <summary>
+    /// Sets the value of an integer variable.
+    /// The variable must already be added to the list of variables for this Flowchart.
+    /// </summary>
+    public void SetIntegerVariable(String key, int value) {
+        IntegerVariable variable = getVariable(key);
+        if (variable != null) {
+            variable.setValue(value);
         }
-        }
+    }
 
-/// <summary>
-/// Gets the value of a float variable.
-/// Returns 0 if the variable key does not exist.
-/// </summary>
-public float GetFloatVariable(string key)
-        {
-        var variable = GetVariable<FloatVariable>(key);
-        if (variable != null)
-        {
-        return GetVariable<FloatVariable>(key).Value;
+    /// <summary>
+    /// Gets the value of a float variable.
+    /// Returns 0 if the variable key does not exist.
+    /// </summary>
+    public float GetFloatVariable(String key) {
+        FloatVariable variable = getVariable(key);
+        if (variable != null) {
+            return ((FloatVariable) getVariable(key)).getValue();
+        } else {
+            return 0f;
         }
-        else
-        {
-        return 0f;
-        }
-        }
+    }
 
-/// <summary>
-/// Sets the value of a float variable.
-/// The variable must already be added to the list of variables for this Flowchart.
-/// </summary>
-public void SetFloatVariable(string key, float value)
-        {
-        var variable = GetVariable<FloatVariable>(key);
-        if (variable != null)
-        {
-        variable.Value = value;
+    /// <summary>
+    /// Sets the value of a float variable.
+    /// The variable must already be added to the list of variables for this Flowchart.
+    /// </summary>
+    public void SetFloatVariable(String key, float value) {
+        FloatVariable variable = getVariable(key);
+        if (variable != null) {
+            variable.setValue(value);
         }
-        }
+    }
 
-/// <summary>
-/// Gets the value of a string variable.
-/// Returns the empty string if the variable key does not exist.
-/// </summary>
-public virtual string GetStringVariable(string key)
-        {
-        var variable = GetVariable<StringVariable>(key);
-        if (variable != null)
-        {
-        return GetVariable<StringVariable>(key).Value;
+    /// <summary>
+    /// Gets the value of a string variable.
+    /// Returns the empty string if the variable key does not exist.
+    /// </summary>
+    public String GetStringVariable(String key) {
+        StringVariable variable = getVariable(key);
+        if (variable != null) {
+            return ((StringVariable) getVariable(key)).getValue();
+        } else {
+            return "";
         }
-        else
-        {
-        return "";
-        }
-        }
+    }
 
-/// <summary>
-/// Sets the value of a string variable.
-/// The variable must already be added to the list of variables for this Flowchart.
-/// </summary>
-public virtual void SetStringVariable(string key, string value)
-        {
-        var variable = GetVariable<StringVariable>(key);
-        if (variable != null)
-        {
-        variable.Value = value;
+    /// <summary>
+    /// Sets the value of a string variable.
+    /// The variable must already be added to the list of variables for this Flowchart.
+    /// </summary>
+    public void SetStringVariable(String key, String value) {
+        StringVariable variable = getVariable(key);
+        if (variable != null) {
+            variable.setValue(value);
         }
-        }
+    }
 
-/// <summary>
-/// Gets the value of a GameObject variable.
-/// Returns null if the variable key does not exist.
-/// </summary>
-public virtual GameObject GetGameObjectVariable(string key)
-        {
-        var variable = GetVariable<GameObjectVariable>(key);
+//    /// <summary>
+//    /// Gets the value of a GameObject variable.
+//    /// Returns null if the variable key does not exist.
+//    /// </summary>
+//    public GameObject GetGameObjectVariable(String key) {
+//        var variable = GetVariable < GameObjectVariable > (key);
+//
+//        if (variable != null) {
+//            return GetVariable < GameObjectVariable > (key).Value;
+//        } else {
+//            return null;
+//        }
+//    }
+//
+//    /// <summary>
+//    /// Sets the value of a GameObject variable.
+//    /// The variable must already be added to the list of variables for this Flowchart.
+//    /// </summary>
+//    public void SetGameObjectVariable(String key, GameObject value) {
+//        var variable = GetVariable < GameObjectVariable > (key);
+//        if (variable != null) {
+//            variable.Value = value;
+//        }
+//    }
+//
+//    /// <summary>
+//    /// Gets the value of a Transform variable.
+//    /// Returns null if the variable key does not exist.
+//    /// </summary>
+//    public Transform GetTransformVariable(string key) {
+//        var variable = GetVariable < TransformVariable > (key);
+//
+//        if (variable != null) {
+//            return GetVariable < TransformVariable > (key).Value;
+//        } else {
+//            return null;
+//        }
+//    }
+//
+//    /// <summary>
+//    /// Sets the value of a Transform variable.
+//    /// The variable must already be added to the list of variables for this Flowchart.
+//    /// </summary>
+//    public void SetTransformVariable(String key, Transform value) {
+//        var variable = GetVariable < TransformVariable > (key);
+//        if (variable != null) {
+//            variable.Value = value;
+//        }
+//    }
 
-        if (variable != null)
-        {
-        return GetVariable<GameObjectVariable>(key).Value;
-        }
-        else
-        {
-        return null;
-        }
-        }
+    /// <summary>
+    /// Set the block objects to be hidden or visible depending on the hideComponents property.
+    /// </summary>
+    public void UpdateHideFlags() {
+//        if (hideComponents) {
+//            var blocks = GetComponents < Block > ();
+//            for (int i = 0; i < blocks.Length; i++) {
+//                var block = blocks[i];
+//                block.hideFlags = HideFlags.HideInInspector;
+//                if (block.gameObject != gameObject) {
+//                    block.hideFlags = HideFlags.HideInHierarchy;
+//                }
+//            }
+//
+//            var commands = GetComponents < Command > ();
+//            for (int i = 0; i < commands.Length; i++) {
+//                var command = commands[i];
+//                command.hideFlags = HideFlags.HideInInspector;
+//            }
+//
+//            var eventHandlers = GetComponents < EventHandler > ();
+//            for (int i = 0; i < eventHandlers.Length; i++) {
+//                var eventHandler = eventHandlers[i];
+//                eventHandler.hideFlags = HideFlags.HideInInspector;
+//            }
+//        } else {
+//            var monoBehaviours = GetComponents < MonoBehaviour > ();
+//            for (int i = 0; i < monoBehaviours.Length; i++) {
+//                var monoBehaviour = monoBehaviours[i];
+//                if (monoBehaviour == null) {
+//                    continue;
+//                }
+//                monoBehaviour.hideFlags = HideFlags.None;
+//                monoBehaviour.gameObject.hideFlags = HideFlags.None;
+//            }
+//        }
+    }
 
-/// <summary>
-/// Sets the value of a GameObject variable.
-/// The variable must already be added to the list of variables for this Flowchart.
-/// </summary>
-public virtual void SetGameObjectVariable(string key, GameObject value)
-        {
-        var variable = GetVariable<GameObjectVariable>(key);
-        if (variable != null)
-        {
-        variable.Value = value;
-        }
-        }
+    /// <summary>
+    /// Clears the list of selected commands.
+    /// </summary>
+    public void ClearSelectedCommands() {
+        selectedCommands.clear();
+    }
 
-/// <summary>
-/// Gets the value of a Transform variable.
-/// Returns null if the variable key does not exist.
-/// </summary>
-public virtual Transform GetTransformVariable(string key)
-        {
-        var variable = GetVariable<TransformVariable>(key);
+    /// <summary>
+    /// Adds a command to the list of selected commands.
+    /// </summary>
+    public void AddSelectedCommand(Command command) {
+        if (!selectedCommands.contains(command)) {
+            selectedCommands.add(command);
+        }
+    }
 
-        if (variable != null)
-        {
-        return GetVariable<TransformVariable>(key).Value;
-        }
-        else
-        {
-        return null;
-        }
-        }
+    /// <summary>
+    /// Clears the list of selected blocks.
+    /// </summary>
+    public void ClearSelectedBlocks() {
+        selectedBlocks.clear();
+    }
 
-/// <summary>
-/// Sets the value of a Transform variable.
-/// The variable must already be added to the list of variables for this Flowchart.
-/// </summary>
-public virtual void SetTransformVariable(string key, Transform value)
-        {
-        var variable = GetVariable<TransformVariable>(key);
-        if (variable != null)
-        {
-        variable.Value = value;
+    /// <summary>
+    /// Adds a block to the list of selected blocks.
+    /// </summary>
+    public void AddSelectedBlock(Block block) {
+        if (!selectedBlocks.contains(block)) {
+            selectedBlocks.add(block);
         }
-        }
+    }
 
-/// <summary>
-/// Set the block objects to be hidden or visible depending on the hideComponents property.
-/// </summary>
-public virtual void UpdateHideFlags()
-        {
-        if (hideComponents)
-        {
-        var blocks = GetComponents<Block>();
-        for (int i = 0; i < blocks.Length; i++)
-        {
-        var block = blocks[i];
-        block.hideFlags = HideFlags.HideInInspector;
-        if (block.gameObject != gameObject)
-        {
-        block.hideFlags = HideFlags.HideInHierarchy;
-        }
-        }
+    public Block getSelectedBlock() {
+        return selectedBlocks.get(0);
+    }
 
-        var commands = GetComponents<Command>();
-        for (int i = 0; i < commands.Length; i++)
-        {
-        var command = commands[i];
-        command.hideFlags = HideFlags.HideInInspector;
-        }
+    public void setSelectedBlock(Block block) {
+        selectedBlocks.clear();
+        selectedBlocks.add(block);
+    }
 
-        var eventHandlers = GetComponents<EventHandler>();
-        for (int i = 0; i < eventHandlers.Length; i++)
-        {
-        var eventHandler = eventHandlers[i];
-        eventHandler.hideFlags = HideFlags.HideInInspector;
-        }
-        }
-        else
-        {
-        var monoBehaviours = GetComponents<MonoBehaviour>();
-        for (int i = 0; i < monoBehaviours.Length; i++)
-        {
-        var monoBehaviour = monoBehaviours[i];
-        if (monoBehaviour == null)
-        {
-        continue;
-        }
-        monoBehaviour.hideFlags = HideFlags.None;
-        monoBehaviour.gameObject.hideFlags = HideFlags.None;
-        }
-        }
-        }
+    /// <summary>
+    /// Reset the commands and variables in the Flowchart.
+    /// </summary>
+    public void Reset(boolean resetCommands, boolean resetVariables) {
+//        if (resetCommands) {
+//            var commands = GetComponents < Command > ();
+//            for (int i = 0; i < commands.Length; i++) {
+//                var command = commands[i];
+//                command.OnReset();
+//            }
+//        }
+//
+//        if (resetVariables) {
+//            for (int i = 0; i < variables.Count; i++) {
+//                var variable = variables[i];
+//                variable.OnReset();
+//            }
+//        }
+    }
 
-/// <summary>
-/// Clears the list of selected commands.
-/// </summary>
-public virtual void ClearSelectedCommands()
-        {
-        selectedCommands.Clear();
-        }
-
-/// <summary>
-/// Adds a command to the list of selected commands.
-/// </summary>
-public virtual void AddSelectedCommand(Command command)
-        {
-        if (!selectedCommands.Contains(command))
-        {
-        selectedCommands.Add(command);
-        }
-        }
-
-/// <summary>
-/// Clears the list of selected blocks.
-/// </summary>
-public virtual void ClearSelectedBlocks()
-        {
-        selectedBlocks.Clear();
-        }
-
-/// <summary>
-/// Adds a block to the list of selected blocks.
-/// </summary>
-public virtual void AddSelectedBlock(Block block)
-        {
-        if (!selectedBlocks.Contains(block))
-        {
-        selectedBlocks.Add(block);
-        }
-        }
-
-/// <summary>
-/// Reset the commands and variables in the Flowchart.
-/// </summary>
-public virtual void Reset(bool resetCommands, bool resetVariables)
-        {
-        if (resetCommands)
-        {
-        var commands = GetComponents<Command>();
-        for (int i = 0; i < commands.Length; i++)
-        {
-        var command = commands[i];
-        command.OnReset();
-        }
-        }
-
-        if (resetVariables)
-        {
-        for (int i = 0; i < variables.Count; i++)
-        {
-        var variable = variables[i];
-        variable.OnReset();
-        }
-        }
-        }
-
-/// <summary>
-/// Override this in a Flowchart subclass to filter which commands are shown in the Add Command list.
-/// </summary>
-public virtual bool IsCommandSupported(CommandInfoAttribute commandInfo)
-        {
-        for (int i = 0; i < hideCommands.Count; i++)
-        {
-        // Match on category or command name (case insensitive)
-        var key = hideCommands[i];
-        if (String.Compare(commandInfo.Category, key, StringComparison.OrdinalIgnoreCase) == 0 || String.Compare(commandInfo.CommandName, key, StringComparison.OrdinalIgnoreCase) == 0)
-        {
-        return false;
-        }
-        }
+    /// <summary>
+    /// Override this in a Flowchart subclass to filter which commands are shown in the Add Command list.
+    /// </summary>
+    public boolean IsCommandSupported(CommandInfo commandInfo) {
+//        for (int i = 0; i < hideCommands.size(); i++) {
+//            // Match on category or command name (case insensitive)
+//            String key = hideCommands.get(i);
+//
+//            // if (String.Compare(commandInfo.Category, key, StringComparison.OrdinalIgnoreCase) == 0 || String.Compare(commandInfo.CommandName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+//            if (String.Compare(commandInfo.Category, key, StringComparison.OrdinalIgnoreCase) == 0 || String.Compare(commandInfo.CommandName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+//                return false;
+//            }
+//        }
 
         return true;
-        }
+    }
 
-/// <summary>
-/// Returns true if there are any executing blocks in this Flowchart.
-/// </summary>
-public virtual bool HasExecutingBlocks()
-        {
-        var blocks = GetComponents<Block>();
-        for (int i = 0; i < blocks.Length; i++)
-        {
-        var block = blocks[i];
-        if (block.IsExecuting())
-        {
-        return true;
-        }
-        }
+    /// <summary>
+    /// Returns true if there are any executing blocks in this Flowchart.
+    /// </summary>
+    public boolean HasExecutingBlocks() {
+//        var blocks = GetComponents < Block > ();
+//        for (int i = 0; i < blocks.Length; i++) {
+//            var block = blocks[i];
+//            if (block.IsExecuting()) {
+//                return true;
+//            }
+//        }
         return false;
-        }
+    }
 
-/// <summary>
+    /// <summary>
 /// Returns a list of all executing blocks in this Flowchart.
 /// </summary>
-public virtual List<Block> GetExecutingBlocks()
-        {
-        var executingBlocks = new List<Block>();
-        var blocks = GetComponents<Block>();
-        for (int i = 0; i < blocks.Length; i++)
-        {
-        var block = blocks[i];
-        if (block.IsExecuting())
-        {
-        executingBlocks.Add(block);
-        }
-        }
+    public List<Block> GetExecutingBlocks() {
+        List<Block> executingBlocks = new ArrayList<Block>();
+//        var blocks = GetComponents < Block > ();
+//        for (int i = 0; i < blocks.Length; i++) {
+//            var block = blocks[i];
+//            if (block.IsExecuting()) {
+//                executingBlocks.Add(block);
+//            }
+//        }
 
         return executingBlocks;
-        }
+    }
 
-/// <summary>
-/// Substitute variables in the input text with the format {$VarName}
-/// This will first match with private variables in this Flowchart, and then
-/// with public variables in all Flowcharts in the scene (and any component
-/// in the scene that implements StringSubstituter.ISubstitutionHandler).
-/// </summary>
-public virtual string SubstituteVariables(string input)
-        {
-        if (stringSubstituer == null)
-        {
-        stringSubstituer = new StringSubstituter();
-        stringSubstituer.CacheSubstitutionHandlers();
+    /// <summary>
+    /// Substitute variables in the input text with the format {$VarName}
+    /// This will first match with private variables in this Flowchart, and then
+    /// with public variables in all Flowcharts in the scene (and any component
+    /// in the scene that implements StringSubstituter.ISubstitutionHandler).
+    /// </summary>
+    public String SubstituteVariables(String input) {
+        if (stringSubstituer == null) {
+            stringSubstituer = new StringSubstituter();
+            stringSubstituer.CacheSubstitutionHandlers();
         }
 
         // Use the string builder from StringSubstituter for efficiency.
-        StringBuilder sb = stringSubstituer._StringBuilder;
-        sb.Length = 0;
-        sb.Append(input);
+        StringBuilder sb = stringSubstituer.getStringBuilder();
+        sb.setLength(0);
+        sb.append(input);
 
         // Instantiate the regular expression object.
         Regex r = new Regex("{\\$.*?}");
+        boolean changed = false;
+//
+//        // Match the regular expression pattern against a text string.
+//        var results = r.Matches(input);
+//        for (int i = 0; i < results.Count; i++) {
+//            Match match = results[i];
+//            string key = match.Value.Substring(2, match.Value.Length - 3);
+//            // Look for any matching private variables in this Flowchart first
+//            for (int j = 0; j < variables.Count; j++) {
+//                var variable = variables[j];
+//                if (variable == null)
+//                    continue;
+//                if (variable.Scope == VariableScope.Private && variable.Key == key) {
+//                    string value = variable.ToString();
+//                    sb.Replace(match.Value, value);
+//                    changed = true;
+//                }
+//            }
+//        }
+//
+//        // Now do all other substitutions in the scene
+//        changed |= stringSubstituer.SubstituteStrings(sb);
 
-        bool changed = false;
-
-        // Match the regular expression pattern against a text string.
-        var results = r.Matches(input);
-        for (int i = 0; i < results.Count; i++)
-        {
-        Match match = results[i];
-        string key = match.Value.Substring(2, match.Value.Length - 3);
-        // Look for any matching private variables in this Flowchart first
-        for (int j = 0; j < variables.Count; j++)
-        {
-        var variable = variables[j];
-        if (variable == null)
-        continue;
-        if (variable.Scope == VariableScope.Private && variable.Key == key)
-        {
-        string value = variable.ToString();
-        sb.Replace(match.Value, value);
-        changed = true;
+        if (changed) {
+            return sb.toString();
+        } else {
+            return input;
         }
-        }
-        }
+    }
 
-        // Now do all other substitutions in the scene
-        changed |= stringSubstituer.SubstituteStrings(sb);
-
-        if (changed)
-        {
-        return sb.ToString();
-        }
-        else
-        {
-        return input;
-        }
-        }
-
-        #endregion
-
-        #region IStringSubstituter implementation
-
-        /// <summary>
-        /// Implementation of StringSubstituter.ISubstitutionHandler which matches any public variable in the Flowchart.
-        /// To perform full variable substitution with all substitution handlers in the scene, you should
-        /// use the SubstituteVariables() method instead.
-        /// </summary>
-        [MoonSharp.Interpreter.MoonSharpHidden]
-public virtual bool SubstituteStrings(StringBuilder input)
-        {
+    /// <summary>
+    /// Implementation of StringSubstituter.ISubstitutionHandler which matches any public variable in the Flowchart.
+    /// To perform full variable substitution with all substitution handlers in the scene, you should
+    /// use the SubstituteVariables() method instead.
+    /// </summary>
+    public boolean SubstituteStrings(StringBuilder input) {
         // Instantiate the regular expression object.
         Regex r = new Regex("{\\$.*?}");
 
-        bool modified = false;
+        boolean modified = false;
 
-        // Match the regular expression pattern against a text string.
-        var results = r.Matches(input.ToString());
-        for (int i = 0; i < results.Count; i++)
-        {
-        Match match = results[i];
-        string key = match.Value.Substring(2, match.Value.Length - 3);
-        // Look for any matching public variables in this Flowchart
-        for (int j = 0; j < variables.Count; j++)
-        {
-        var variable = variables[j];
-        if (variable == null)
-        {
-        continue;
-        }
-        if (variable.Scope == VariableScope.Public && variable.Key == key)
-        {
-        string value = variable.ToString();
-        input.Replace(match.Value, value);
-        modified = true;
-        }
-        }
-        }
+//        // Match the regular expression pattern against a text string.
+//        var results = r.Matches(input.toString());
+//        for (int i = 0; i < results.Count; i++) {
+//            Match match = results[i];
+//            String key = match.Value.Substring(2, match.Value.Length - 3);
+//            // Look for any matching public variables in this Flowchart
+//            for (int j = 0; j < variables.Count; j++) {
+//                var variable = variables[j];
+//                if (variable == null) {
+//                    continue;
+//                }
+//                if (variable.Scope == VariableScope.Public && variable.Key == key) {
+//                    String value = variable.toString();
+//                    input.Replace(match.Value, value);
+//                    modified = true;
+//                }
+//            }
+//        }
 
         return modified;
-        }
+    }
 
-        #endregion
-        }
+    public float getStepPause() {
+        return stepPause;
+    }
+
+    public void setStepPause(float stepPause) {
+        this.stepPause = stepPause;
+    }
+}

@@ -15,6 +15,8 @@
 
 package org.erith.core.atomcommand.commands;
 
+import com.badlogic.gdx.graphics.Color;
+import org.erith.core.atomcommand.base.BaseObject;
 import org.erith.core.atomcommand.components.Block;
 import org.erith.core.atomcommand.components.Flowchart;
 import org.erith.core.atomcommand.components.variables.Variable;
@@ -22,7 +24,7 @@ import org.erith.core.atomcommand.components.variables.Variable;
 import java.io.Serializable;
 import java.util.List;
 
-public abstract class Command implements Serializable {
+public abstract class Command extends BaseObject implements Serializable {
     protected int itemId = -1;
     protected int indentLevel;
     protected String errorMessage = "";
@@ -81,91 +83,118 @@ public abstract class Command implements Serializable {
         }
     }
 
+    public boolean isExecuting() {
+        return isExecuting;
+    }
+
+    public void setExecuting(boolean executing) {
+        isExecuting = executing;
+    }
+
     /// <summary>
     /// Called when the parent block has been requested to stop executing, and
     /// this command is the currently executing command.
     /// Use this callback to terminate any asynchronous operations and
     /// cleanup state so that the command is ready to execute again later on.
     /// </summary>
-    public abstract void OnStopExecuting();
+    public void OnStopExecuting() {
+    }
 
     /// <summary>
     /// Called when the new command is added to a block in the editor.
     /// </summary>
-    public abstract void OnCommandAdded(Block parentBlock);
+    public void OnCommandAdded(Block parentBlock) {
+    }
 
     /// <summary>
     /// Called when the command is deleted from a block in the editor.
     /// </summary>
-    public abstract void OnCommandRemoved(Block parentBlock);
+    public void OnCommandRemoved(Block parentBlock) {
+    }
 
     /// <summary>
     /// Called when this command starts execution.
     /// </summary>
-    public abstract void OnEnter();
+    public void OnEnter() {
+    }
 
     /// <summary>
     /// Called when this command ends execution.
     /// </summary>
-    public abstract void OnExit();
+    public void OnExit() {
+    }
 
     /// <summary>
     /// Called when this command is reset. This happens when the Reset command is used.
     /// </summary>
-    public abstract void OnReset();
+    public void OnReset() {
+    }
 
     /// <summary>
     /// Populates a list with the Blocks that this command references.
     /// </summary>
-    public abstract void GetConnectedBlocks(List<Block> connectedBlocks);
+    public void GetConnectedBlocks(List<Block> connectedBlocks) {
+    }
 
     /// <summary>
     /// Returns true if this command references the variable.
     /// Used to highlight variables in the variable list when a command is selected.
     /// </summary>
-    public abstract boolean HasReference(Variable variable);
+    public boolean HasReference(Variable variable) {
+        return false;
+    }
 
     /// <summary>
     /// Returns the summary text to display in the command inspector.
     /// </summary>
-    public abstract String GetSummary();
+    public String GetSummary() {
+        return "";
+    }
 
     /// <summary>
     /// Returns the help text to display for this command.
     /// </summary>
-    public abstract String GetHelpText();
+    public String GetHelpText() {
+        return "";
+    }
 
     /// <summary>
     /// Return true if this command opens a block of commands. Used for indenting commands.
     /// </summary>
-    public abstract boolean OpenBlock();
+    public boolean OpenBlock() {
+        return false;
+    }
 
     /// <summary>
     /// Return true if this command closes a block of commands. Used for indenting commands.
     /// </summary>
-    public abstract boolean CloseBlock();
+    public boolean CloseBlock() {
+        return false;
+    }
 
     /// <summary>
     /// Return the color for the command background in inspector.
     /// </summary>
     /// <returns>The button color.</returns>
-    public abstract Object GetButtonColor();
-//    public virtual Color GetButtonColor()
-//    {
-//        return Color.white;
-//    }
+    public Color GetButtonColor() {
+        return Color.WHITE;
+    }
 
     /// <summary>
     /// Returns true if the specified property should be displayed in the inspector.
     /// This is useful for hiding certain properties based on the value of another property.
     /// </summary>
-    public abstract boolean IsPropertyVisible(String propertyName);
+    public boolean IsPropertyVisible(String propertyName) {
+        return false;
+    }
 
     /// <summary>
     /// Returns true if the specified property should be displayed as a reorderable list in the inspector.
     /// This only applies for array properties and has no effect for non-array properties.
     /// </summary>
-    public abstract boolean IsReorderableArray(String propertyName);
+    public boolean IsReorderableArray(String propertyName) {
+        return false;
+    }
 
     /// <summary>
     /// Returns the localization id for the Flowchart that contains this command.
@@ -202,5 +231,21 @@ public abstract class Command implements Serializable {
 
     public void setCommandIndex(int commandIndex) {
         this.commandIndex = commandIndex;
+    }
+
+    public int getIndentLevel() {
+        return indentLevel;
+    }
+
+    public void setIndentLevel(int indentLevel) {
+        this.indentLevel = indentLevel;
+    }
+
+    public float getExecutingIconTimer() {
+        return executingIconTimer;
+    }
+
+    public void setExecutingIconTimer(float executingIconTimer) {
+        this.executingIconTimer = executingIconTimer;
     }
 }

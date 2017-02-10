@@ -1,5 +1,9 @@
 package org.erith.core.atomcommand.variabletypes;
 
+/// <summary>
+/// String variable type.
+/// </summary>
+
 import org.erith.core.atomcommand.annotations.VariableInfo;
 import org.erith.core.atomcommand.components.variables.CompareOperator;
 import org.erith.core.atomcommand.components.variables.VariableBase;
@@ -9,17 +13,17 @@ import java.io.Serializable;
 import static org.erith.core.atomcommand.components.variables.CompareOperator.*;
 
 /// <summary>
-/// Boolean variable type.
+/// String variable type.
 /// </summary>
-@VariableInfo(category = "", variableType = "Boolean", order = 0)
-public class BooleanVariable extends VariableBase<Boolean> implements Serializable {
-    public boolean Evaluate(CompareOperator compareOperator, boolean booleanValue) {
-        boolean condition = false;
-        boolean lhs = value;
-        boolean rhs = booleanValue;
+@VariableInfo(category = "", variableType = "String", order = 0)
+public class StringVariable extends VariableBase<String> implements Serializable {
+    public boolean Evaluate(CompareOperator compareOperator, String stringValue) {
+        String lhs = value;
+        String rhs = stringValue;
 
-        switch (compareOperator)
-        {
+        boolean condition = false;
+
+        switch (compareOperator) {
             case Equals:
                 condition = lhs == rhs;
                 break;

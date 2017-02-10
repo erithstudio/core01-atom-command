@@ -4,26 +4,19 @@ import org.erith.core.atomcommand.annotations.VariableProperty;
 
 import java.io.Serializable;
 
-/**
- * Created by user on 2/9/2017.
- */
+/// <summary>
+/// Container for a Boolean variable reference or constant value.
+/// </summary>
 public class BooleanData implements Serializable {
 
     @VariableProperty(defaultText = "<Value>", variableTypes = BooleanVariable.class)
     public BooleanVariable booleanRef;
-
     public Boolean booleanVal;
 
-    public BooleanData(boolean v)
-    {
+    public BooleanData(boolean v) {
         booleanVal = v;
         booleanRef = null;
     }
-
-    /*public static implicit operator bool(BooleanData booleanData)
-    {
-        return booleanData.Value;
-    }*/
 
     public boolean getValue() {
         return (booleanRef == null) ? booleanVal : booleanRef.getValue();
@@ -37,14 +30,10 @@ public class BooleanData implements Serializable {
         }
     }
 
-    public String GetDescription()
-    {
-        if (booleanRef == null)
-        {
+    public String GetDescription() {
+        if (booleanRef == null) {
             return booleanVal.toString();
-        }
-        else
-        {
+        } else {
             return booleanRef.getKey();
         }
     }

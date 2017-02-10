@@ -30,6 +30,11 @@ public class StringSubstituter implements IStringSubstituter
         this.recursionDepth = recursionDepth;
     }
 
+    public StringSubstituter() {
+        stringBuilder = new StringBuilder(1024);
+        this.recursionDepth = 5;
+    }
+
     public StringBuilder getStringBuilder() {
         return stringBuilder;
     }

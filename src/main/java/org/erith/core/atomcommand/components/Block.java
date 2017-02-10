@@ -16,6 +16,13 @@
 package org.erith.core.atomcommand.components;
 
 import org.erith.core.atomcommand.commands.Command;
+import org.erith.core.atomcommand.commands.Comment;
+import org.erith.core.atomcommand.commands.Label;
+import org.erith.core.atomcommand.eventhandlers.Action;
+import org.erith.core.atomcommand.eventhandlers.EventHandler;
+import org.erith.core.atomcommand.signals.BlockSignals;
+import org.erith.core.atomcommand.utils.AtomCommandConstants;
+import org.erith.core.atomcommand.utils.AtomTime;
 
 import java.util.*;
 
@@ -184,7 +191,7 @@ public class Block extends Node {
             {
                 continue;
             }
-            command.CommandIndex = index++;
+            command.setCommandIndex(index++);
         }
     }
 
@@ -193,7 +200,8 @@ public class Block extends Node {
     /// </summary>
     public Flowchart GetFlowchart()
     {
-        return GetComponent<Flowchart>();
+//        return GetComponent<Flowchart>();
+        return null;
     }
 
     /// <summary>
@@ -217,7 +225,7 @@ public class Block extends Node {
     /// </summary>
     public void StartExecution()
     {
-        StartCoroutine(Execute());
+//        StartCoroutine(Execute());
     }
 
     /// <summary>
@@ -225,35 +233,33 @@ public class Block extends Node {
     /// </summary>
     /// <param name="commandIndex">Index of command to start execution at</param>
     /// <param name="onComplete">Delegate function to call when execution completes</param>
-    public Enumeration Execute(int commandIndex = 0, Action onComplete = null)
-    {
+    public void Execute(int commandIndex, Action onComplete) throws InterruptedException {
         if (executionState != ExecutionState.Idle)
         {
-            yield break;
+//            yield break;
+            return;
         }
 
         if (!executionInfoSet)
         {
-            SetExecutionInfo();
+            setExecutionInfo();
         }
 
         executionCount++;
 
-        var flowchart = GetFlowchart();
+        Flowchart flowchart = GetFlowchart();
         executionState = ExecutionState.Executing;
-        BlockSignals.DoBlockStart(this);
+        BlockSignals.doBlockStart(this);
 
-            #if UNITY_EDITOR
         // Select the executing block & the first command
-        flowchart.SelectedBlock = this;
-        if (commandList.Count > 0)
+        flowchart.setSelectedBlock(this);
+        if (commandList.size() > 0)
         {
             flowchart.ClearSelectedCommands();
-            flowchart.AddSelectedCommand(commandList[0]);
+            flowchart.AddSelectedCommand(commandList.get(0));
         }
-            #endif
 
-            jumpToCommandIndex = commandIndex;
+        jumpToCommandIndex = commandIndex;
 
         int i = 0;
         while (true)
@@ -266,15 +272,14 @@ public class Block extends Node {
             }
 
             // Skip disabled commands, comments and labels
-            while (i < commandList.Count &&
-                    (!commandList[i].enabled ||
-                            commandList[i].GetType() == typeof(Comment) ||
-                            commandList[i].GetType() == typeof(Label)))
+            while (i < commandList.size() &&
+                    (!commandList.get(i).isEnabled() ||  commandList.get(i) instanceof Comment) ||
+                            commandList.get(i) instanceof Label)
             {
-                i = commandList[i].CommandIndex + 1;
+                i = commandList.get(i).getCommandIndex() + 1;
             }
 
-            if (i >= commandList.Count)
+            if (i >= commandList.size())
             {
                 break;
             }
@@ -286,53 +291,52 @@ public class Block extends Node {
             }
             else
             {
-                previousActiveCommandIndex = activeCommand.CommandIndex;
+                previousActiveCommandIndex = activeCommand.getCommandIndex();
             }
 
-            var command = commandList[i];
+            Command command = commandList.get(i);
             activeCommand = command;
 
-            if (flowchart.IsActive())
+            if (flowchart.isActive())
             {
                 // Auto select a command in some situations
-                if ((flowchart.SelectedCommands.Count == 0 && i == 0) ||
-                        (flowchart.SelectedCommands.Count == 1 && flowchart.SelectedCommands[0].CommandIndex == previousActiveCommandIndex))
+                if ((flowchart.getSelectedCommands().size() == 0 && i == 0) ||
+                        (flowchart.getSelectedCommands().size() == 1 && flowchart.getSelectedCommands().get(0).getCommandIndex() == previousActiveCommandIndex))
                 {
                     flowchart.ClearSelectedCommands();
-                    flowchart.AddSelectedCommand(commandList[i]);
+                    flowchart.AddSelectedCommand(commandList.get(i));
                 }
             }
 
-            command.IsExecuting = true;
+            command.setExecuting(true);
             // This icon timer is managed by the FlowchartWindow class, but we also need to
             // set it here in case a command starts and finishes execution before the next window update.
-            command.ExecutingIconTimer = Time.realtimeSinceStartup + FungusConstants.ExecutingIconFadeTime;
-            BlockSignals.DoCommandExecute(this, command, i, commandList.Count);
+            command.setExecutingIconTimer(AtomTime.getRealtimeSinceStartup() + AtomCommandConstants.ExecutingIconFadeTime);
+            BlockSignals.doCommandExecute(this, command, i, commandList.size());
             command.Execute();
 
             // Wait until the executing command sets another command to jump to via Command.Continue()
             while (jumpToCommandIndex == -1)
             {
-                yield return null;
+                return;
             }
 
-                #if UNITY_EDITOR
-            if (flowchart.StepPause > 0f)
+            if (flowchart.stepPause > 0f)
             {
-                yield return new WaitForSeconds(flowchart.StepPause);
+                // return new WaitForSeconds(flowchart.getStepPause());
+                Thread.sleep((long) flowchart.getStepPause());
             }
-                #endif
 
-            command.IsExecuting = false;
+            command.setExecuting(false);
         }
 
         executionState = ExecutionState.Idle;
         activeCommand = null;
-        BlockSignals.DoBlockEnd(this);
+        BlockSignals.doBlockEnd(this);
 
         if (onComplete != null)
         {
-            onComplete();
+            onComplete.execute();
         }
     }
 
@@ -344,12 +348,12 @@ public class Block extends Node {
         // Tell the executing command to stop immediately
         if (activeCommand != null)
         {
-            activeCommand.IsExecuting = false;
+            activeCommand.setExecuting(false);
             activeCommand.OnStopExecuting();
         }
 
         // This will cause the execution loop to break on the next iteration
-        jumpToCommandIndex = int.MaxValue;
+        jumpToCommandIndex = Integer.MAX_VALUE;
     }
 
     /// <summary>
@@ -360,7 +364,7 @@ public class Block extends Node {
         List<Block> connectedBlocks = new ArrayList<Block>();
         for (int i = 0; i < commandList.size(); i++)
         {
-            Command command = commandList.get(i)
+            Command command = commandList.get(i);
             if (command != null)
             {
                 command.GetConnectedBlocks(connectedBlocks);
@@ -403,7 +407,7 @@ public class Block extends Node {
             }
             // Negative indent level is not permitted
             indentLevel = Math.max(indentLevel, 0);
-            command.IndentLevel = indentLevel;
+            command.setIndentLevel(indentLevel);
             if (command.OpenBlock())
             {
                 indentLevel++;
@@ -424,8 +428,8 @@ public class Block extends Node {
         for (int i = 0; i < commandList.size(); i++)
         {
             Command command = commandList.get(i);
-            var labelCommand = command as Label;
-            if (labelCommand != null && String.Compare(labelCommand.Key, labelKey, true) == 0)
+            Label labelCommand = (Label) command;
+            if (labelCommand != null && labelCommand.getKey().equalsIgnoreCase(labelKey))
             {
                 return i;
             }

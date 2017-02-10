@@ -2,7 +2,6 @@ package org.erith.core.atomcommand.eventhandlers;
 
 import org.erith.core.atomcommand.annotations.EventHandlerInfo;
 import org.erith.core.atomcommand.annotations.Tooltip;
-import org.erith.core.atomcommand.components.EventHandler;
 
 /// <summary>
 /// The block will execute when the specified message is received from a Send Message command.

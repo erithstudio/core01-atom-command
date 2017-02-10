@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
-package org.erith.core.atomcommand.components;
+package org.erith.core.atomcommand.eventhandlers;
+
+import org.erith.core.atomcommand.components.Block;
+import org.erith.core.atomcommand.components.Flowchart;
 
 public class EventHandler {
     /**
@@ -42,15 +45,15 @@ public class EventHandler {
             return false;
         }
 
-        var flowchart = parentBlock.GetFlowchart();
+        Flowchart flowchart = parentBlock.GetFlowchart();
 
         // Auto-follow the executing block if none is currently selected
-        if (flowchart.SelectedBlock == null)
+        if (flowchart.getSelectedBlock() == null)
         {
-            flowchart.SelectedBlock = ParentBlock;
+            flowchart.setSelectedBlock(parentBlock);
         }
 
-        return flowchart.ExecuteBlock(ParentBlock);
+        return flowchart.ExecuteBlock(parentBlock);
     }
 
     /**
